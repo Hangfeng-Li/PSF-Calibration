@@ -43,7 +43,8 @@ for i in range(size[0]):
 
 
 def mouse1(event,x,y,flags,param):
-    global zoom,runimage
+    global zoom,runimage,flag1,RECORDZOOM
+    flag1=0
     text="NUM:"+str(zoom)
     runimage=input6[zoom,:,:]     
     cv2.putText(runimage,text,(100,100),cv2.FONT_HERSHEY_PLAIN,2.0,(255,255,255),2)
@@ -68,6 +69,10 @@ def mouse1(event,x,y,flags,param):
                            # runimage=input6[zoom,:,:]
                        else:  # 滚轮下移
                            zoom -= wheel_step
+    elif event == cv2.EVENT_MBUTTONDOWN:
+        RECORDZOOM[flag1]=zoom
+        flag1 += 1
+        
     else:
         zoom -= 0
    
@@ -76,16 +81,13 @@ def mouse1(event,x,y,flags,param):
     #      cv2.putText(runimage,text,(100,500),cv2.FONT_HERSHEY_PLAIN,2.0,(255,255,255),2)
     #      cv2.imshow('image',runimage)
      
-wheel_step, zoom = 1, 0  # 缩放系数， 缩放值
+wheel_step, zoom = 1, 0  # 滚轮值，与初始值
+RECORDZOOM=[0,1]
 runimage=input6[0,:,:]
 cv2.namedWindow('image')
 cv2.setMouseCallback('image',mouse1)
-# cv2.imshow('image',runimage)
 cv2.waitKey(0)
 
-cv2.namedWindow('image1')
-cv2.imshow('image1',input6[60,:,:])
-cv2.waitKey(0)
 
 
 def mouse2(event,x,y,flags,param):
