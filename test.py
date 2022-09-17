@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Sep 16 11:07:17 2022
-
-@author: lihsn
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Thu Sep 15 15:23:53 2022
 
-@author: lihsn
+@author: LI HANGENG
 """
 
 import nd2
