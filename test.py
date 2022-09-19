@@ -127,10 +127,10 @@ cut_img=input0[RECORDZOOM[0]:RECORDZOOM[1],min_y:min_y+height,min_x:min_x+width]
 
 orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
 coor=gausscenter.gc(orign_image)
-x=coor[:,0]
-y=coor[:,1]
+y=coor[:,0]
+x=coor[:,1]
 plt.imshow(orign_image)
-plt.scatter(y,x,s=10,c="r")
+plt.scatter(x,y,s=10,c="r")
 
 
 
