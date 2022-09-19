@@ -14,7 +14,7 @@ global img
 global point1,point2
 
 
-input0 = nd2.imread('C:/Users/lihsn/Desktop/MBI/Tony Lab/cx/E 488 off 561 on 001.nd2') # read to numpy array
+input0 = nd2.imread('G:/tony lab/cx/E 488 off 561 on 001.nd2') # read to numpy array
 size = input0.shape
 # input1=input0[0,:,:]
 # plt.imshow(input1)
