@@ -1,15 +1,25 @@
+ # -*- coding: utf-8 -*-
+"""
+Created on Fri Sep 16 11:07:17 2022
+
+@author: lihsn
+"""
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 15 15:23:53 2022
 
-@author: LI HANGENG
+@author: lihsn
 """
 
 import nd2
 import numpy as np
 from PIL import Image
+from matplotlib.widgets import Cursor
 import cv2
 import matplotlib.pyplot as plt
+import gausscenter
+import math
 global img
 global point1,point2
 
@@ -114,6 +124,21 @@ width=abs(point1[0]-point2[0])
 height=abs(point1[1]-point2[1])
 
 cut_img=input0[RECORDZOOM[0]:RECORDZOOM[1],min_y:min_y+height,min_x:min_x+width] #A cropped image collection
+
+orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
+coor=gausscenter.gc(orign_image)
+x=coor[:,0]
+y=coor[:,1]
+plt.imshow(orign_image)
+plt.scatter(y,x,s=10,c="r")
+
+
+
+
+
+
+
+
 
 
 
