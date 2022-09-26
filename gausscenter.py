@@ -12,13 +12,16 @@ def gc(orign_image):
     
     
     # orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
-    
-    gray_img = cv2.cvtColor(orign_image, cv2.COLOR_BGR2GRAY)
+    imgmax=np.max(np.hstack(orign_image))
+    img1=255*orign_image/imgmax
+    orign_image_uint8=img1.astype(np.uint8)
+    gray_img = orign_image_uint8
+    # gray_img = cv2.cvtColor(orign_image_uint8, cv2.COLOR_BGR2GRAY)
     cv2.namedWindow('gray_img')
     cv2.imshow('gray_img',gray_img)
     cv2.waitKey(0)
     
-    blur_image=cv2.GaussianBlur(gray_img,[5,5],0)
+    blur_image=cv2.GaussianBlur(gray_img,[7,7],0)
     cv2.namedWindow('blur_image')
     cv2.imshow('blur_image',blur_image)
     cv2.waitKey(0)
@@ -36,7 +39,7 @@ def gc(orign_image):
        temp_A=np.zeros((length,1))
        temp_B=np.zeros((length,5))
        for j in range(length):
-           psrc=gray_img[x[j],y[j]].astype("float32")
+           psrc=orign_image[x[j],y[j]].astype("float32")
            if psrc>0:
               temp_A[j]=psrc*math.log(psrc)
                
