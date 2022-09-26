@@ -20,11 +20,14 @@ import cv2
 import matplotlib.pyplot as plt
 import gausscenter
 import math
+from tracker import *
+import tifffile
 global img
 global point1,point2
 
 
-input0 = nd2.imread('G:/tony lab/cx/E 488 off 561 on 001.nd2') # read to numpy array
+# input0 = nd2.imread('G:/tony lab/cx/E 488 off 561 on 001.nd2') # read to numpy array
+input0 = tifffile.imread('G:/tony lab/cx/E 488 off 561 on 001-half.tif')
 size = input0.shape
 # input1=input0[0,:,:]
 # plt.imshow(input1)
@@ -115,7 +118,7 @@ def mouse2(event,x,y,flags,param): #Capture the area of interest in the picture
 
 cv2.namedWindow('image2')
 cv2.setMouseCallback('image2',mouse2) #Capture images 
-cv2.imshow('image2',img)
+# cv2.imshow('image2',img)
 cv2.waitKey(0)
 
 min_x=min(point1[0],point2[0]) #The two points selected in the picture (top left point and bottom right point)
@@ -125,12 +128,31 @@ height=abs(point1[1]-point2[1])
 
 cut_img=input0[RECORDZOOM[0]:RECORDZOOM[1],min_y:min_y+height,min_x:min_x+width] #A cropped image collection
 
-orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
-coor=gausscenter.gc(orign_image)
-y=coor[:,0]
-x=coor[:,1]
-plt.imshow(orign_image)
-plt.scatter(x,y,s=10,c="r")
+
+tracker = EuclideanDistTracker()
+record={}
+
+tracker_type = 'MIL'
+tracker = cv2.MultiTracker_create()
+for i in range(lengthimg):
+    
+# orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
+    orign_image=cut_img[i,:,:]
+    coor=gausscenter.gc(orign_image)
+    y=coor[:,0]
+    x=coor[:,1]
+    plt.imshow(orign_image)
+    plt.scatter(x,y,s=10,c="r")
+    detections = []
+    for count in range(len(y)):
+        detections.append([x[count], y[count]])
+        
+    boxes_ids = tracker.update(detections)
+    record=[]
+    for box_id in boxes_ids:
+        x, y, id = box_id
+        record.append=
+
 
 
 
