@@ -73,8 +73,9 @@ frame_size = 2*psf_z_size-1
 pixel=0.064
 z_unit=0.1
 z_unit_expect=0.05
-
-
+psf_nobacknoise1=np.zeros((np.shape(psf_nobacknoise)))
+for i in range(psf_z_size):
+    psf_nobacknoise1[i,:,:]=psf_nobacknoise[i,:,:]*4000/np.sum(psf_nobacknoise)
 
 
 grid_x, grid_y,grid_z = np.mgrid[0:4.48:141j, 0:4.48:141j,0:2.2:45j]
@@ -94,7 +95,8 @@ for i1 in range(psf_z_size):
             
 values=np.zeros((psf_z_size*psf_xy_size*psf_xy_size,1))
 for i in range((len(pointsz))):
-    values[i] = psf[int(pointsz[i]/0.1),int(pointsx[i]/0.064),int(pointsy[i]/0.064)]
+    values[i] = psf_nobacknoise1[int(pointsz[i]/0.1),int(pointsx[i]/0.064),int(pointsy[i]/0.064)]
+    
 points=np.zeros((psf_z_size*psf_xy_size*psf_xy_size,3))
 for i in range(115943):
     points[i,0]=pointsx[i]
@@ -109,3 +111,5 @@ grid_v0 = griddata(points, values, (grid_x, grid_y,grid_z), method='nearest')
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.axes3d import Axes3D
 plt.figure()
+plt.imshow(grid_v0[:,:,20,0])
+plt.imshow(psf_nobacknoise1[10,:,:])
