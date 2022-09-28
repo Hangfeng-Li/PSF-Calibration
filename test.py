@@ -234,8 +234,10 @@ for i in range(lengthimg):
             
         angle[i2]=math.atan((x12c[0]-x12c[1])/(y12c[0]-y12c[1]))
         if angle[i2]<0:
-            angle[i2]=-1*angle[i2]+(math.pi)/2
-        
+             angle[i2]=angle[i2]+(math.pi)
+        # if angle[i2]>3:
+        #     angle[i2]=2*angle[i2]-(math.pi)
+            
         xc= pair[i2][0]
         yc= pair[i2][1]
         abx= abs(x12c[0]-x12c[1])
@@ -245,9 +247,9 @@ for i in range(lengthimg):
         w=int(abx+20)
         h=int(aby+20)
         idi[i2]=int(i2+1)
-        text = "ID:"+str(idi[i2])+" " + "Angle:"+str(round(angle[i2],3))   
+        text = "ID:"+str(idi[i2])+" " + "Angle:"+str(round(angle[i2],2))   
        
-        cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.6, (255, 0, 0), 1)
+        cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.5, (255, 0, 0), 1)
         cv2.rectangle(gray_img, (int(xtl[i2]), int(ytl[i2])), (int(xtl[i2]+w), int(ytl[i2]+h)), (0, 255, 0), 2) 
         
     cv2.imshow("gray_img", gray_img)
@@ -257,7 +259,7 @@ for i in range(lengthimg):
     plt.scatter(x,y,s=10,c="r")
     y=coor[:,0]
     x=coor[:,1]   
-        
+    cv2.imwrite('G:/tony lab/cx/ppt/%d.png' %(i), gray_img) #保存图片路径    
     
 
 
