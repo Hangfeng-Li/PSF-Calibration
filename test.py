@@ -20,6 +20,7 @@ import cv2
 import matplotlib.pyplot as plt
 import gausscenter
 import math
+import heapq
 from tracker import *
 import tifffile
 global img
@@ -132,8 +133,8 @@ cut_img=input0[RECORDZOOM[0]:RECORDZOOM[1],min_y:min_y+height,min_x:min_x+width]
 tracker = EuclideanDistTracker()
 record={}
 
-tracker_type = 'MIL'
-tracker = cv2.MultiTracker_create()
+# tracker_type = 'MIL'  
+# tracker = cv2.MultiTracker_create()
 for i in range(lengthimg):
     
 # orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
@@ -141,17 +142,129 @@ for i in range(lengthimg):
     coor=gausscenter.gc(orign_image)
     y=coor[:,0]
     x=coor[:,1]
-    plt.imshow(orign_image)
-    plt.scatter(x,y,s=10,c="r")
+    
     detections = []
     for count in range(len(y)):
         detections.append([x[count], y[count]])
         
     boxes_ids = tracker.update(detections)
-    record=[]
-    for box_id in boxes_ids:
-        x, y, id = box_id
-        record.append=
+    # recordframe=[]
+    # for box_id in boxes_ids:
+    #     x1, y1, id = box_id
+    #     recordframe[id]=(x1,y1)
+        
+    record[i]=boxes_ids
+    
+    if i==0:
+        pair={}
+        record0=record[0]
+        a = np.linspace(0,len(boxes_ids)-1,len(boxes_ids))
+        a1=a.astype(np.int)
+        b = []  
+        
+        for j in range(1, len(boxes_ids)):  
+            b += zip(a1[:-j], a1[j:]) 
+            
+        distance=np.ones(len(b))
+        for j1 in range(len(b)):
+            index=np.array(b[j1])
+            x2,y2,id2=record0[index[0]] 
+            x3,y3,id3=record0[index[1]]
+            distance[j1] = math.hypot(x2 - x3, y2 - y3)
+            
+        
+        pairnum=int(len(boxes_ids)/2)
+        idx = np.argpartition(distance, pairnum)[0:pairnum]
+        pair={}
+        for j2 in range(len(idx)):
+            pairseparate=np.array(b[idx[j2]])
+            xc1,yc1,idc1=boxes_ids[pairseparate[0]]
+            xc2,yc2,idc2=boxes_ids[pairseparate[1]]
+            xc=(xc1+xc2)/2
+            yc=(yc1+yc2)/2
+            pair[j2]=(xc,yc,b[idx[j2]])
+    
+    else:
+        
+        record0=record[i]
+        a = np.linspace(0,len(boxes_ids)-1,len(boxes_ids))
+        a1=a.astype(np.int)
+        ridx={}  
+        
+        
+        for j in range(len(pair)):
+            
+            prepair=np.array(pair[j])
+            paircompair=np.zeros(len(boxes_ids))
+            for j1 in range(len(boxes_ids)):
+                
+                x2=np.array(boxes_ids[j1])[0]
+                y2=np.array(boxes_ids[j1])[1]
+                distancec = math.hypot(x2 - prepair[0], y2 - prepair[1])
+                paircompair[j1]=distancec
+                
+            num=int(len(pair))
+            idx = np.argpartition(paircompair, num)[0:num]
+            ridx[j]=idx
+        
+        for j2 in range(len(pair)):
+            xc1,yc1,idc1=boxes_ids[ridx[j2][0]]
+            xc2,yc2,idc2=boxes_ids[ridx[j2][1]]
+            xc=(xc1+xc2)/2
+            yc=(yc1+yc2)/2
+            pair[j2]=(xc,yc,(ridx[j2][0],ridx[j2][1]))
+            
+    imgmax=np.max(np.hstack(orign_image))
+    img1=255*orign_image/imgmax
+    orign_image_uint8=img1.astype(np.uint8)
+    gray_img = orign_image_uint8   
+    xtl=np.zeros(len(pair))  
+    ytl=np.zeros(len(pair)) 
+    idi=np.zeros(len(pair)) 
+    
+    angle=np.zeros(len(pair)) 
+    
+    for i2 in range(len(pair)):
+        x12c=np.zeros(2)
+        y12c=np.zeros(2)
+        
+        for i3 in range(2):
+            x12c[i3]=boxes_ids[pair[i2][2][i3]][0]
+            y12c[i3]=boxes_ids[pair[i2][2][i3]][1]
+            
+        angle[i2]=math.atan((x12c[0]-x12c[1])/(y12c[0]-y12c[1]))
+        if angle[i2]<0:
+            angle[i2]=-1*angle[i2]+(math.pi)/2
+        
+        xc= pair[i2][0]
+        yc= pair[i2][1]
+        abx= abs(x12c[0]-x12c[1])
+        aby= abs(y12c[0]-y12c[1]) 
+        xtl[i2]=int(xc-(abx+20)/2)
+        ytl[i2]=int(yc-(aby+20)/2)
+        w=int(abx+20)
+        h=int(aby+20)
+        idi[i2]=int(i2+1)
+        text = "ID:"+str(idi[i2])+" " + "Angle:"+str(round(angle[i2],3))   
+       
+        cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.6, (255, 0, 0), 1)
+        cv2.rectangle(gray_img, (int(xtl[i2]), int(ytl[i2])), (int(xtl[i2]+w), int(ytl[i2]+h)), (0, 255, 0), 2) 
+        
+    cv2.imshow("gray_img", gray_img)
+    cv2.waitKey(0)
+    plt.figure()
+    plt.imshow(orign_image)
+    plt.scatter(x,y,s=10,c="r")
+    y=coor[:,0]
+    x=coor[:,1]   
+        
+    
+
+
+
+
+    
+
 
 
 

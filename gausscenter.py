@@ -21,12 +21,17 @@ def gc(orign_image):
     cv2.imshow('gray_img',gray_img)
     cv2.waitKey(0)
     
-    blur_image=cv2.GaussianBlur(gray_img,[7,7],0)
+    blur_image=cv2.GaussianBlur(gray_img,[5,5],0)
     cv2.namedWindow('blur_image')
     cv2.imshow('blur_image',blur_image)
     cv2.waitKey(0)
     
     ret,mask_image=cv2.threshold(blur_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    kernel = np.ones((5,5),np.uint8)  
+    erosion = cv2.erode(mask_image,kernel,iterations = 1)
+    kernel = np.ones((5,5),np.uint8) 
+    dilation = cv2.dilate(erosion,kernel,iterations = 1)
+    mask_image=dilation
     ret,labels,stats,centroid=cv2.connectedComponentsWithStats(mask_image)
     cv2.namedWindow('mask_image')
     cv2.imshow('mask_image',mask_image)
