@@ -11,7 +11,8 @@ import math
 def gc(orign_image):
     
     
-    # orign_image=cv2.imread('G:/tony lab/cx/Capture.png')
+    #orign_image0=cv2.imread('G:/tony lab/cx/Capture.png')
+    #orign_image=(orign_image0[:,:,0]+orign_image0[:,:,1]+orign_image0[:,:,2])/3
     imgmax=np.max(np.hstack(orign_image))
     img1=255*orign_image/imgmax
     orign_image_uint8=img1.astype(np.uint8)
@@ -27,12 +28,25 @@ def gc(orign_image):
     cv2.waitKey(0)
     
     ret,mask_image=cv2.threshold(blur_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    kernel = np.ones((5,5),np.uint8)  
+    kernel = np.ones((3,3),np.uint8)  
     erosion = cv2.erode(mask_image,kernel,iterations = 1)
-    kernel = np.ones((5,5),np.uint8) 
+    kernel = np.ones((3,3),np.uint8) 
     dilation = cv2.dilate(erosion,kernel,iterations = 1)
     mask_image=dilation
     ret,labels,stats,centroid=cv2.connectedComponentsWithStats(mask_image)
+    cv2.namedWindow('mask_image')
+    cv2.imshow('mask_image',mask_image)
+    cv2.waitKey(0)
+    for i in range(ret-1):
+       x,y=np.where(labels==(i+1))
+       length=len(x)
+       if length>120:
+           for j in range(length):
+               mask_image[x[j],y[j]]=0
+       if length<10:
+           for j in range(length):
+               mask_image[x[j],y[j]]=0
+    ret,labels,stats,centroid=cv2.connectedComponentsWithStats(mask_image)       
     cv2.namedWindow('mask_image')
     cv2.imshow('mask_image',mask_image)
     cv2.waitKey(0)
