@@ -275,7 +275,7 @@ for i in range(lengthimg):
             
             ridx[j]=idx
             
-        
+        pair_length=len(pair)
         usedspots=[]
         for j2 in range(len(pair)): #The center of DH-PSF of this frame is calculated
             xc1,yc1,idc1=boxes_ids[ridx[j2][0]]
@@ -289,9 +289,10 @@ for i in range(lengthimg):
                 
             else:
                 pair[j2]=prepair[j2]
-                pair[j2][3]=0 #If the distance is not normal, it is discarded and expressed as 0
+                pair[j2]=(0,0,(0,0),0) #If the distance is not normal, it is discarded and expressed as 0
             
-        if len(boxes_ids)/2>len(pair):
+        if int(len(boxes_ids)/2)>len(pair):
+            a2=a1
             contained=np.zeros(np.shape(a2))
             usedspots1=np.array(usedspots)
             usedspots2=np.array(usedspots1).flatten()
@@ -307,8 +308,40 @@ for i in range(lengthimg):
                     unusedspots[jishu]=a2[aanum] #Get the spot that is not used
                     jishu+=1
             unusedspots=unusedspots.astype(int)        #Get the spot that is not used
-    
             
+           
+            b_arrange = []  
+            
+            for jun in range(1, len(unusedspots)):  
+                b_arrange += zip(unusedspots[:-jun], unusedspots[jun:])
+                
+            distance_b_arrange=np.ones(len(b_arrange)) #The distance between two spots in each permutation
+            for jba in range(len(b_arrange)):
+                index=np.array(b_arrange[jba])
+                x2,y2,id2=record0[index[0]] 
+                x3,y3,id3=record0[index[1]]
+                distance_b_arrange[jba] = math.hypot(x2 - x3, y2 - y3)
+                
+            pairnum_unused=int(len(unusedspots)/2)
+            if pairnum_unused==1:
+                idx_unused=[0]
+                idx_unused=np.array(idx_unused)
+            else:
+                idx_unused = np.argpartition(distance_b_arrange, pairnum_unused)[0:pairnum_unused] #Sort the distances and take the  minimums(num=pair)
+            
+            jishu_j2idx_unuesed=0
+            for j2idx_unuesed in range(len(idx_unused)): #The center coordinates of DH-PSF are extracted and stored
+                pairseparate=np.array(b_arrange[idx_unused[j2idx_unuesed]])
+                xc1,yc1,idc1=boxes_ids[pairseparate[0]]
+                xc2,yc2,idc2=boxes_ids[pairseparate[1]]
+                xc=(xc1+xc2)/2
+                yc=(yc1+yc2)/2
+                if (2*Fixed_distance-20)<math.hypot(xc2 - xc1, yc2 - yc1)<(2*Fixed_distance+20):
+                    pair[pair_length+jishu_j2idx_unuesed]=(xc,yc,b_arrange[idx_unused[j2idx_unuesed]],1)
+                jishu_j2idx_unuesed+=1 #The excess light spots conforming to the DH-PSF construction were generated into a new DH-PSF and recorded
+            
+            
+        # if len(boxes_ids)/2<len(pair):  
     
     
     
@@ -324,32 +357,33 @@ for i in range(lengthimg):
     angle=np.zeros(len(pair)) 
     
     for i2 in range(len(pair)):
-        x12c=np.zeros(2)
-        y12c=np.zeros(2)
-        
-        for i3 in range(2):
-            x12c[i3]=boxes_ids[pair[i2][2][i3]][0]
-            y12c[i3]=boxes_ids[pair[i2][2][i3]][1]
+        if pair[i2][3]==1:
+            x12c=np.zeros(2)
+            y12c=np.zeros(2)
             
-        angle[i2]=math.atan((x12c[0]-x12c[1])/(y12c[0]-y12c[1])) #Computing Angle
-        if angle[i2]<0:
-             angle[i2]=angle[i2]+(math.pi) #Computing Angle
-        # if angle[i2]>3:
-        #     angle[i2]=2*angle[i2]-(math.pi)
-            
-        xc= pair[i2][0]
-        yc= pair[i2][1]
-        abx= abs(x12c[0]-x12c[1])
-        aby= abs(y12c[0]-y12c[1]) 
-        xtl[i2]=int(xc-(abx+20)/2) #The upper-left corner coordinates of the box
-        ytl[i2]=int(yc-(aby+20)/2)
-        w=int(abx+20) #Choose the wide x length
-        h=int(aby+20) #Select the wide x width
-        idi[i2]=int(i2+1)
-        text = "ID:"+str(idi[i2])+" " + "Angle:"+str(round(angle[i2],2))   
-       
-        cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.5, (255, 0, 0), 1)
-        cv2.rectangle(gray_img, (int(xtl[i2]), int(ytl[i2])), (int(xtl[i2]+w), int(ytl[i2]+h)), (255, 0, 0), 2) 
+            for i3 in range(2):
+                x12c[i3]=boxes_ids[pair[i2][2][i3]][0]
+                y12c[i3]=boxes_ids[pair[i2][2][i3]][1]
+                
+            angle[i2]=math.atan((x12c[0]-x12c[1])/(y12c[0]-y12c[1])) #Computing Angle
+            if angle[i2]<0:
+                 angle[i2]=angle[i2]+(math.pi) #Computing Angle
+            # if angle[i2]>3:
+            #     angle[i2]=2*angle[i2]-(math.pi)
+                
+            xc= pair[i2][0]
+            yc= pair[i2][1]
+            abx= abs(x12c[0]-x12c[1])
+            aby= abs(y12c[0]-y12c[1]) 
+            xtl[i2]=int(xc-(abx+20)/2) #The upper-left corner coordinates of the box
+            ytl[i2]=int(yc-(aby+20)/2)
+            w=int(abx+20) #Choose the wide x length
+            h=int(aby+20) #Select the wide x width
+            idi[i2]=int(i2+1)
+            text = "ID:"+str(idi[i2])+" " + "Angle:"+str(round(angle[i2],2))   
+           
+            cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.5, (255, 0, 0), 1)
+            cv2.rectangle(gray_img, (int(xtl[i2]), int(ytl[i2])), (int(xtl[i2]+w), int(ytl[i2]+h)), (255, 0, 0), 2) 
         
     cv2.imshow("gray_img", gray_img)
     cv2.waitKey(0)
