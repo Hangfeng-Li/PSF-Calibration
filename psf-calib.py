@@ -2,7 +2,7 @@
 """
 Created on Thu Sep 22 13:47:12 2022
 
-@author: e0947330
+@author: Li Hangfeng
 """
 
 import nd2
