@@ -8,19 +8,44 @@ import tifffile
 import numpy as  np
 from scipy.interpolate import griddata,interp1d
 import matplotlib.pyplot as plt
+import cv2
 
 
 
 
-input0 = np.array(tifffile.imread('G:/tony lab/cx/test0011.tif'),dtype=float)
+input0 = np.array(tifffile.imread('G:/tony lab/cx/cabil.tif'),dtype=float)
 x_pixel=0.065
 y_pixel=0.065#um
 z_step_size=0.1
+total_photon=4000
 
 input0_size = input0.shape
 input0_x_size=input0_size[2]
 input0_y_size=input0_size[1]
 input0_z_size=input0_size[0]
+
+#remove noise
+input0_nonoise=np.zeros(input0.shape)
+for k1 in range(input0_z_size):
+    mask_image=np.zeros(input0[k1,:,:].shape)
+    total_energy=np.sum(input0[k1,:,:])
+    avage_energy=total_energy/(input0_x_size*input0_y_size)
+    input0_nonoise[k1,:,:]=input0[k1,:,:]-avage_energy
+    input0_nonoise[k1,:,:][input0_nonoise[k1,:,:] < 0] = 0
+    # imgmax=np.max(np.hstack(input0[k1,:,:]))
+    # mask_image[input0[k1,:,:] < 0.2*imgmax] = 1
+    
+    # img1=255*input0[k1,:,:]/imgmax
+    # orign_image_uint8=img1.astype(np.uint8)
+    # gray_img = orign_image_uint8
+    # ret,mask_image=cv2.threshold(gray_img,0,1,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    # backnoise=(np.sum(input0[k1,:,:])-np.sum((mask_image*input0[k1,:,:])))/np.sum(mask_image)
+    # psf_nobacknoise=np.rint(input0[k1,:,:]-backnoise*np.ones((np.shape(input0[k1,:,:]))))
+    # psf_nobacknoise[psf_nobacknoise < 0] = 0
+    # input0_nonoise[k1,:,:]=psf_nobacknoise
+plt.imshow(input0_nonoise[26,:,:], origin='lower')
+input0=input0_nonoise
+
 #xy
 # average_band_y=int(0.4*input0_y_size)
 # average_band_x=int(0.4*input0_x_size)
@@ -63,7 +88,7 @@ input0_z_size=input0_size[0]
 upsample=4
 grid_x, grid_y = np.mgrid[0:input0_x_size*x_pixel:((upsample*input0_x_size)-(upsample-1))*1j, 0:input0_y_size*y_pixel:((upsample*input0_y_size)-(upsample-1))*1j]
 
-points =  np.mgrid[0:1:input0_x_size*1j, 0:1:input0_y_size*1j]
+points =  np.mgrid[0:input0_x_size*x_pixel:input0_x_size*1j, 0:input0_y_size*y_pixel:input0_y_size*1j]
 x_points=points[0,:].reshape(-1, 1)
 y_points=points[1,:].reshape(-1, 1)
 xy_points=np.append(x_points,y_points,axis=1)
@@ -87,6 +112,13 @@ for i1 in range(spline_xy_y_size):
         z_values=spline_xy[i1,j1,:]
         f2 = interp1d(z_points, z_values, kind='cubic')
         spline_xyz[i1,j1,:]=f2(grid_z)
-        plt.imshow(spline_xyz[:,:,36], origin='lower')
-        plt.imshow(input0[9,:,:], origin='lower')
+        
+
+# plt.imshow(spline_xyz[:,:,36], origin='lower')
+# plt.imshow(input0[9,:,:], origin='lower')
+fft2_spline_xyz=np.zeros(spline_xyz.shape)
+spline_xyz_photon=np.zeros(spline_xyz.shape)
+for k1 in range((upsample*input0_z_size)-(upsample-1)):
+    spline_xyz_photon[:,:,k1]=total_photon*spline_xyz[:,:,k1]/np.sum(spline_xyz[:,:,k1])
+    fft2_spline_xyz[:,:,k1]=np.fft.fftshift(np.fft.fft2(spline_xyz[:,:,k1]))
         
