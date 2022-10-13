@@ -258,7 +258,7 @@ plt.imshow(spline_xyz[:,:,12],origin='lower')
 
 # plt.imshow(np.absolute(fft2_spline_xy_padzeros_photon), origin='lower')
 plt.imshow(spline_xy_padzeros_photon[:,:,6], origin='lower')
-plt.scatter(ycorr[6], xcorr[6],s=10,c="r")
+plt.scatter(xcorr[6], ycorr[6],s=10,c="r")
 # plt.imshow(fft2_spline_xy_padzeros_photon, origin='lower')
 plt.imshow(np.absolute(corr), origin='lower')
 
