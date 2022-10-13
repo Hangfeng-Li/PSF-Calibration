@@ -14,7 +14,7 @@ from scipy.interpolate import griddata,interp1d
 
 input0 = np.array(tifffile.imread('G:/tony lab/cx/E 488 off 561 on 001-half.tif'))
 input0_size = input0.shape
-img=input0[15,:,:] 
+img=input0[10,:,:] 
 imgmax=np.max(np.hstack(img))
 img1=255*img/imgmax
 img2=img1.astype(np.uint8)
@@ -67,11 +67,12 @@ psf_nobacknoise[psf_nobacknoise < 0] = 0
 #
 
 
-diameter_psf=7#pixel
-distance_psf=11#pixel
+diameter_psf=14#pixel
+distance_psf=18#pixel
 big_circel=diameter_psf+distance_psf
 small_circel=distance_psf-diameter_psf
 mask0=np.zeros((big_circel,big_circel))
+
 
 if big_circel%2==0:
     centre_circel=(big_circel-1)/2.0
@@ -103,7 +104,7 @@ else:
     
 plt.imshow(mask0, origin='lower')            
 
-
+mask0=mask_extract2
 
 scharr=mask0
 
@@ -113,7 +114,7 @@ scharr=mask0
 grad=signal.convolve2d(psf_nobacknoise,scharr,boundary='symm',mode='same') 
 plt.imshow(input0[10,:,:], origin='lower')
 plt.imshow(grad, origin='lower')
-grad0=((grad>3000) )
+grad0=((grad>20) )
 grad00=grad0*np.ones(grad0.shape)
 plt.imshow(grad0, origin='lower')
 
@@ -145,7 +146,7 @@ plt.imshow(grad0, origin='lower')
 grad11=grad00.astype(np.uint8)
 num_labels, labels, stats, centroids=cv2.connectedComponentsWithStats(grad11,connectivity=8)
 for i1 in range(stats.shape[0]):
-    if stats[i1,4]<200 or stats[i1,4]>600:
+    if stats[i1,4]<50 or stats[i1,4]>300:
        labels[labels==i1]=0 
 labels_mask=np.zeros(labels.shape)
 
@@ -188,8 +189,14 @@ num_new_mask, labels_new_mask, stats_new_mask, centroids_new_mask=cv2.connectedC
 input0_x_size=int(math.sqrt(stats_new_mask[1,4]))
 input0_y_size=input0_x_size
 upsample=4
-calib_size=185########
+calib_size=125########
 padzero=calib_size-((upsample*input0_x_size)-(upsample-1))
+total_photon=4000
+record_z_min=np.zeros((num_new_mask,2))
+spline_xy_padzeros_photon=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),num_new_mask))
+corr=np.zeros(spline_xy_padzeros_photon.shape)
+ycorr=np.zeros(num_new_mask)
+xcorr=ycorr
 for i1 in range(num_new_mask):
     # mask_sep=np.zeros((input0_x_size,input0_y_size))
     if i1>0:
@@ -201,11 +208,42 @@ for i1 in range(num_new_mask):
         y_points=points[1,:].reshape(-1, 1)
         xy_points=np.append(x_points,y_points,axis=1)
         spline_xy=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1)))   
-        values_points=psf_nobacknoise[stats_new_mask[i1,1]:stats_new_mask[i1,1]+input0_y_size,stats_new_mask[i1,0]:stats_new_mask[i1,0]+input0_x_size].reshape(-1, 1)
+        values_points0=img[stats_new_mask[i1,1]:stats_new_mask[i1,1]+input0_y_size,stats_new_mask[i1,0]:stats_new_mask[i1,0]+input0_x_size]
+        mask_image=np.zeros(values_points0.shape)
+        total_energy=np.sum(values_points0)
+        avage_energy=total_energy/(input0_x_size*input0_y_size)
+        input0_nonoise=values_points0-avage_energy*0.2
+        input0_nonoise[:,:][input0_nonoise < 0] = 0
+        values_points=input0_nonoise.reshape(-1, 1)
         grid_z2 = griddata(xy_points, values_points, (grid_x, grid_y), method='cubic')
         spline_xy=grid_z2[:,:,0]
+        spline_xy_padzeros=np.pad(spline_xy,((int(padzero/2),int(padzero/2)),(int(padzero/2),int(padzero/2))),'constant', constant_values=(0,0)) 
+        sumz=np.zeros(fft2_spline_xyz.shape[2])
+        spline_xy_padzeros_photon[:,:,i1]=total_photon*spline_xy_padzeros/np.sum(spline_xy_padzeros)
+        for j1 in range(fft2_spline_xyz.shape[2]):
+            
+            # fft2_spline_xy_padzeros_photon=np.fft.fftshift(np.fft.fft2(spline_xy_padzeros_photon))
+            fft2_spline_xy_padzeros_photon=np.fft.fft2(spline_xy_padzeros_photon[:,:,i1])
+            
+            aa=4000*np.absolute(fft2_spline_xy_padzeros_photon)/np.sum(np.absolute(fft2_spline_xy_padzeros_photon))
+            bb=4000*np.absolute(fft2_spline_xyz[:,:,j1])/np.sum(np.absolute(fft2_spline_xyz[:,:,j1]))
+            # sumz[j1]=np.sum((np.absolute(fft2_spline_xy_padzeros_photon)-np.absolute(fft2_spline_xyz[:,:,j1]))**2)
+            sumz[j1]=np.sum((aa-bb)**2)
+        sumz_list=sumz.tolist()
+        sumz_min_list = min(sumz_list) 
+        min_index = sumz_list.index(min(sumz_list)) 
+        
+        record_z_min[i1,:]=[sumz_min_list,min_index]
+        corr[:,:,i1] = signal.correlate2d( spline_xyz_photon[:,:,min_index],spline_xy_padzeros_photon[:,:,i1], boundary='symm', mode='same')
+        ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
     
-
+# plt.imshow(np.absolute(fft2_spline_xyz[:,:,80]), origin='lower')
+plt.imshow(spline_xyz[:,:,12],origin='lower')
+plt.scatter(xcorr[6], ycorr[6],s=10,c="r")
+# plt.imshow(np.absolute(fft2_spline_xy_padzeros_photon), origin='lower')
+plt.imshow(spline_xy_padzeros_photon[:,:,6], origin='lower')
+# plt.imshow(fft2_spline_xy_padzeros_photon, origin='lower')
+plt.imshow(np.absolute(corr), origin='lower')
 
 
 from skimage import io

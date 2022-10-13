@@ -13,7 +13,7 @@ import cv2
 
 
 
-input0 = np.array(tifffile.imread('G:/tony lab/cx/cabil.tif'),dtype=float)
+input0 = np.array(tifffile.imread('G:/tony lab/cx/cailb4.tif'),dtype=float)
 x_pixel=0.065
 y_pixel=0.065#um
 z_step_size=0.1
@@ -30,7 +30,7 @@ for k1 in range(input0_z_size):
     mask_image=np.zeros(input0[k1,:,:].shape)
     total_energy=np.sum(input0[k1,:,:])
     avage_energy=total_energy/(input0_x_size*input0_y_size)
-    input0_nonoise[k1,:,:]=input0[k1,:,:]-avage_energy
+    input0_nonoise[k1,:,:]=input0[k1,:,:]-avage_energy*0.2
     input0_nonoise[k1,:,:][input0_nonoise[k1,:,:] < 0] = 0
     # imgmax=np.max(np.hstack(input0[k1,:,:]))
     # mask_image[input0[k1,:,:] < 0.2*imgmax] = 1
@@ -43,8 +43,17 @@ for k1 in range(input0_z_size):
     # psf_nobacknoise=np.rint(input0[k1,:,:]-backnoise*np.ones((np.shape(input0[k1,:,:]))))
     # psf_nobacknoise[psf_nobacknoise < 0] = 0
     # input0_nonoise[k1,:,:]=psf_nobacknoise
-plt.imshow(input0_nonoise[26,:,:], origin='lower')
+plt.imshow(input0_nonoise[1,:,:], origin='lower')
 input0=input0_nonoise
+
+mask_extract0=np.zeros((input0_x_size,input0_y_size))
+for k1 in range(input0_z_size):
+    mask_extract0=input0_nonoise[k1,:,:]+mask_extract0
+    
+mask_extract1=100*mask_extract0/np.sum(mask_extract0)
+mask_extract2=mask_extract1-np.max(mask_extract1)*0.8
+mask_extract2[mask_extract2<0]=0
+plt.imshow(mask_extract2, origin='lower')
 
 #xy
 # average_band_y=int(0.4*input0_y_size)
@@ -104,6 +113,10 @@ spline_xy_size = spline_xy.shape
 spline_xy_y_size=spline_xy_size[0]
 spline_xy_x_size=spline_xy_size[1]
  
+
+
+
+
 z_points=np.linspace(0,z_step_size*(input0_z_size-1),input0_z_size)
 grid_z=np.linspace(0,z_step_size*(input0_z_size-1),((upsample*input0_z_size)-(upsample-1)))
 spline_xyz=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),(upsample*input0_z_size)-(upsample-1)))
@@ -116,9 +129,10 @@ for i1 in range(spline_xy_y_size):
 
 # plt.imshow(spline_xyz[:,:,36], origin='lower')
 # plt.imshow(input0[9,:,:], origin='lower')
-fft2_spline_xyz=np.zeros(spline_xyz.shape)
-spline_xyz_photon=np.zeros(spline_xyz.shape)
+fft2_spline_xyz=np.zeros(spline_xyz.shape,dtype=complex)
+spline_xyz_photon=np.zeros(spline_xyz.shape,dtype=complex)
 for k1 in range((upsample*input0_z_size)-(upsample-1)):
     spline_xyz_photon[:,:,k1]=total_photon*spline_xyz[:,:,k1]/np.sum(spline_xyz[:,:,k1])
-    fft2_spline_xyz[:,:,k1]=np.fft.fftshift(np.fft.fft2(spline_xyz[:,:,k1]))
+    # fft2_spline_xyz[:,:,k1]=np.fft.fftshift(np.fft.fft2(spline_xyz[:,:,k1]))
+    fft2_spline_xyz[:,:,k1]=np.fft.fft2(spline_xyz[:,:,k1])
         
