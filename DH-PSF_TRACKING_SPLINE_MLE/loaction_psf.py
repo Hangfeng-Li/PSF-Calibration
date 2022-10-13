@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import math
 from scipy.interpolate import griddata,interp1d
 
-input0 = np.array(tifffile.imread('G:/tony lab/cx/E 488 off 561 on 001-half.tif'))
+input0 = np.array(tifffile.imread('C:/Users/lihsn/Desktop/MBI/Tony Lab/cx/E 488 off 561 on 001,half.tif'))
 input0_size = input0.shape
 img=input0[10,:,:] 
 imgmax=np.max(np.hstack(img))
@@ -194,9 +194,9 @@ padzero=calib_size-((upsample*input0_x_size)-(upsample-1))
 total_photon=4000
 record_z_min=np.zeros((num_new_mask,2))
 spline_xy_padzeros_photon=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),num_new_mask))
-corr=np.zeros(spline_xy_padzeros_photon.shape)
+corr=np.zeros((((upsample*input0_x_size)-(upsample-1))*2-1,((upsample*input0_y_size)-(upsample-1))*2-1,num_new_mask))
 ycorr=np.zeros(num_new_mask)
-xcorr=ycorr
+xcorr=np.zeros(num_new_mask)
 for i1 in range(num_new_mask):
     # mask_sep=np.zeros((input0_x_size,input0_y_size))
     if i1>0:
@@ -234,18 +234,37 @@ for i1 in range(num_new_mask):
         min_index = sumz_list.index(min(sumz_list)) 
         
         record_z_min[i1,:]=[sumz_min_list,min_index]
-        corr[:,:,i1] = signal.correlate2d( spline_xyz_photon[:,:,min_index],spline_xy_padzeros_photon[:,:,i1], boundary='symm', mode='same')
-        ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
+        # corr[:,:,i1] = signal.correlate2d( spline_xy_padzeros_photon[:,:,i1],spline_xyz_photon[:,:,min_index], mode='full', boundary='fill', fillvalue=0)
+        # ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
+        # corr[:,:,i1] = np.correlate(spline_xyz_photon[:,:,min_index],spline_xy_padzeros_photon[:,:,i1],mode='same')
+        # ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
+        xyzb = correlate2d(spline_xy_padzeros_photon[:,:,i1],spline_xyz_photon[:,:,min_index])
+        ycorr[i1]=xyzb[0]
+        xcorr[i1]=xyzb[1]
+
+def correlate2d(image1, image2):
+    image21=4000*image2/np.sum(image2)
+    image22=image21-np.max(image21)*0.6
+    image22[image22<0]=0
+    con2d=signal.convolve2d(image1, image22, 'same')
     
+    pos=np.unravel_index(np.argmax(con2d),con2d.shape)
+    return pos
+
+
+
 # plt.imshow(np.absolute(fft2_spline_xyz[:,:,80]), origin='lower')
 plt.imshow(spline_xyz[:,:,12],origin='lower')
-plt.scatter(xcorr[6], ycorr[6],s=10,c="r")
+
 # plt.imshow(np.absolute(fft2_spline_xy_padzeros_photon), origin='lower')
 plt.imshow(spline_xy_padzeros_photon[:,:,6], origin='lower')
+plt.scatter(ycorr[6], xcorr[6],s=10,c="r")
 # plt.imshow(fft2_spline_xy_padzeros_photon, origin='lower')
 plt.imshow(np.absolute(corr), origin='lower')
 
 
+
+
+
 from skimage import io
 io.imsave('G:/tony lab/cx/change.tif', text12)
-
