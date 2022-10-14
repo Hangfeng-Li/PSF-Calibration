@@ -14,125 +14,286 @@ import cv2
 
 
 input0 = np.array(tifffile.imread('G:/tony lab/cx/cailb4.tif'),dtype=float)
-x_pixel=0.065
-y_pixel=0.065#um
-z_step_size=0.1
-total_photon=4000
-
 input0_size = input0.shape
-input0_x_size=input0_size[2]
-input0_y_size=input0_size[1]
-input0_z_size=input0_size[0]
-
-#remove noise
-input0_nonoise=np.zeros(input0.shape)
-for k1 in range(input0_z_size):
-    mask_image=np.zeros(input0[k1,:,:].shape)
-    total_energy=np.sum(input0[k1,:,:])
-    avage_energy=total_energy/(input0_x_size*input0_y_size)
-    input0_nonoise[k1,:,:]=input0[k1,:,:]-avage_energy*0.2
-    input0_nonoise[k1,:,:][input0_nonoise[k1,:,:] < 0] = 0
-    # imgmax=np.max(np.hstack(input0[k1,:,:]))
-    # mask_image[input0[k1,:,:] < 0.2*imgmax] = 1
-    
-    # img1=255*input0[k1,:,:]/imgmax
-    # orign_image_uint8=img1.astype(np.uint8)
-    # gray_img = orign_image_uint8
-    # ret,mask_image=cv2.threshold(gray_img,0,1,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-    # backnoise=(np.sum(input0[k1,:,:])-np.sum((mask_image*input0[k1,:,:])))/np.sum(mask_image)
-    # psf_nobacknoise=np.rint(input0[k1,:,:]-backnoise*np.ones((np.shape(input0[k1,:,:]))))
-    # psf_nobacknoise[psf_nobacknoise < 0] = 0
-    # input0_nonoise[k1,:,:]=psf_nobacknoise
-plt.imshow(input0_nonoise[1,:,:], origin='lower')
-input0=input0_nonoise
-
-mask_extract0=np.zeros((input0_x_size,input0_y_size))
-for k1 in range(input0_z_size):
-    mask_extract0=input0_nonoise[k1,:,:]+mask_extract0
-    
-mask_extract1=100*mask_extract0/np.sum(mask_extract0)
-mask_extract2=mask_extract1-np.max(mask_extract1)*0.8
-mask_extract2[mask_extract2<0]=0
-plt.imshow(mask_extract2, origin='lower')
-
-#xy
-# average_band_y=int(0.4*input0_y_size)
-# average_band_x=int(0.4*input0_x_size)
-# if average_band_y%2==1:
-#     average_band_y=average_band_y+1
-# if average_band_x%2==1:
-#     average_band_x=average_band_x+1
-# for k in range(input0_z_size):
-#     P_x=np.zeros(input0_x_size)
-#     P_y=np.zeros(input0_y_size)
-#     P_x_n=np.zeros(input0_x_size)
-#     P_y_n=np.zeros(input0_y_size)
-#     if input0_x_size%2==0:
-#         for j1 in range(int(((input0_x_size/2)-1)-(average_band_x/2)),int(((input0_x_size/2))+(average_band_x/2))):
-#            P_y= input0[k,:,j1]/average_band_y+P_y
-#     else:
-#         for j1 in range(int(((input0_x_size-1)/2)-(average_band_x/2)),int(((input0_x_size-1)/2)+(average_band_x/2))):
-#            P_y= input0[k,:,j1]/average_band_y+P_y
-#     if input0_y_size%2==0:
-#         for i1 in range(int(((input0_y_size/2)-1)-(average_band_y/2)),int(((input0_y_size/2))+(average_band_y/2))):
-#            P_x= input0[k,i1,:]/average_band_x+P_x
-#     else:
-#         for i1 in range(int(((input0_y_size-1)/2)-(average_band_y/2)),int(((input0_y_size-1)/2)+(average_band_y/2))):
-#            P_x= input0[k,i1,:]/average_band_x+P_x   
-#     for i1 in range(input0_x_size):
-#         P_x_n[i1]=P_x[-i1]
-#     for j1 in range(input0_y_size):
-#         P_y_n[j1]=P_y[-j1]
-#     x_corr=np.correlate(P_x,P_x_n,'same')
-#     y_corr=np.correlate(P_y,P_y_n,'same')
-    
-# xx_points=np.linspace(0,x_pixel*input0_x_size,input0_x_size)
-# yy_points=np.linspace(0,y_pixel*input0_y_size,input0_y_size)    
-# plt.scatter(xx_points, x_corr)
-# plt.show()  
-# plt.scatter(yy_points, y_corr)
-# plt.show()  
-  
+img=input0[70,:,:] 
+imgmax=np.max(np.hstack(img))
+img1=255*img/imgmax
+img2=img1.astype(np.uint8)
+cv2.namedWindow('image2')
+cv2.imshow('image2',img2)
+cv2.waitKey(0)
 #
+def mouse3(event,x,y,flags,param): #Capture the area of interest in the picture
+    global img2,point1,point2
+    
+    img3=img2.copy()
+    cv2.imshow('image2',img3)
+    if event==cv2.EVENT_LBUTTONDOWN: #Left click
+        point1=(x,y)
+        cv2.circle(img2,point1,10,(0,255,0),5)
+        cv2.imshow('image2',img3)
+
+    elif event==cv2.EVENT_MOUSEMOVE and (flags&cv2.EVENT_FLAG_LBUTTON): #Move the mouse and drag with the left button
+        cv2.rectangle(img2,point1,(x,y),(255,0,0),15)
+        cv2.imshow('image2',img3)
+
+    elif event==cv2.EVENT_LBUTTONUP: #Left-click to release
+        point2=(x,y)
+        cv2.rectangle(img2,point1,point2,(0,0,255),5)
+        cv2.imshow('image2',img3)
+      
+cv2.namedWindow('image2')
+cv2.setMouseCallback('image2',mouse3) #Capture images 
+cv2.imshow('image2',img2)
+cv2.waitKey(0)
+
+min_x=min(point1[0],point2[0]) #The two points selected in the picture (top left point and bottom right point)
+min_y=min(point1[1],point2[1])
+width=abs(point1[0]-point2[0])
+height=abs(point1[1]-point2[1])
+
+cut_img=img[min_y:min_y+height,min_x:min_x+width] #A cropped image collection
+
+cut_img_xsize=cut_img.shape[1]
+cut_img_ysize=cut_img.shape[0]
+
+
+psf_nobacknoise=np.zeros((cut_img.shape))
+
+backnoise=np.sum(cut_img)/(cut_img_xsize*cut_img_ysize)
+psf_nobacknoise=np.rint(img-backnoise*np.ones((np.shape(img))))
+    
+psf_nobacknoise[psf_nobacknoise < 0] = 0
+
+#
+
+
+diameter_psf=14#pixel
+distance_psf=18#pixel
+big_circel=diameter_psf+distance_psf
+small_circel=distance_psf-diameter_psf
+mask0=np.zeros((big_circel,big_circel))
+
+
+if big_circel%2==0:
+    centre_circel=(big_circel-1)/2.0
+    for i1 in range(big_circel):
+        for j1 in range(big_circel):
+            if np.square(i1-centre_circel)+np.square(j1-centre_circel)<=np.square(big_circel/2.0):
+                mask0[i1,j1]=1
+else:
+    centre_circel=big_circel/2.0
+    for i1 in range(big_circel):
+        for j1 in range(big_circel):
+            if np.square(i1-centre_circel)+np.square(j1-centre_circel)<=np.square(big_circel/2.0):
+                mask0[i1,j1]=1
+                
+plt.imshow(mask0, origin='lower')                  
+                
+if small_circel%2==0:
+    centre_circel=(big_circel-1)/2.0
+    for i1 in range(big_circel):
+        for j1 in range(big_circel):
+            if np.square(i1-centre_circel)+np.square(j1-centre_circel)<=np.square(small_circel/2.0):
+                mask0[i1,j1]=0
+else:
+    centre_circel=big_circel/2.0
+    for i1 in range(big_circel):
+        for j1 in range(big_circel):
+            if np.square(i1-centre_circel)+np.square(j1-centre_circel)<=np.square(small_circel/2.0):
+                mask0[i1,j1]=0
+    
+plt.imshow(mask0, origin='lower')            
+
+mask0=mask_extract2
+
+scharr=mask0
+
+
+
+
+grad=signal.convolve2d(psf_nobacknoise,scharr,boundary='symm',mode='same') 
+plt.imshow(input0[10,:,:], origin='lower')
+plt.imshow(grad, origin='lower')
+grad0=((grad>20) )
+grad00=grad0*np.ones(grad0.shape)
+plt.imshow(grad0, origin='lower')
+
+# kernel_w=int((distance_psf+diameter_psf)/2)
+# kernel = np.ones((kernel_w,kernel_w),np.uint8)
+# grad01 = cv2.dilate(grad00,kernel,iterations = 4)
+# grad01 = cv2.erode(grad01,kernel,iterations = 3)
+# grad1=grad01.astype(np.uint8)*255
+# cv2.namedWindow('GRAD1')
+# cv2.imshow('GRAD1',grad1)
+# cv2.waitKey(0)
+
+# text11=(np.multiply(psf_nobacknoise,grad01))
+# text12=np.array(text11,dtype=int)
+# plt.imshow(text12, origin='lower')
+
+# img12=text12
+# imgmax=np.max(np.hstack(img12))
+# img13=255*img12/imgmax
+# img14=img13.astype(np.uint8)
+
+# cv2.namedWindow('image4')
+# cv2.imshow('image4',img14)
+# cv2.waitKey(0)
+# cv2.namedWindow('grad01')
+# cv2.imshow('grad01',grad01)
+# cv2.waitKey(0)
+
+grad11=grad00.astype(np.uint8)
+num_labels, labels, stats, centroids=cv2.connectedComponentsWithStats(grad11,connectivity=8)
+for i1 in range(stats.shape[0]):
+    if stats[i1,4]<50 or stats[i1,4]>300:
+       labels[labels==i1]=0 
+labels_mask=np.zeros(labels.shape)
+
+labels_mask[labels>0]=1
+plt.imshow(labels_mask, origin='lower')
+
+text111=(np.multiply(psf_nobacknoise,labels_mask))
+text121=np.array(text111,dtype=int)
+img121=text121
+imgmax=np.max(np.hstack(img121))
+img131=255*img121/imgmax
+img141=img131.astype(np.uint8)
+cv2.namedWindow('image141')
+cv2.imshow('image141',img141)
+cv2.waitKey(0)
+
+num_labels_mask, labels_mask, stats_mask, centroids_mask=cv2.connectedComponentsWithStats(labels_mask.astype(np.uint8),connectivity=8)
+new_mask=np.zeros(labels_mask.shape)
+record_new_mask=[]
+flag0=0
+for i1 in range(num_labels_mask):
+    if (math.ceil(big_circel/2)<=centroids_mask[i1,0]) and (math.ceil(big_circel/2)<=centroids_mask[i1,1]):
+        if (centroids_mask[i1,0]+math.ceil(big_circel/2)<input0_size[2]) and (centroids_mask[i1,1]+math.ceil(big_circel/2)<input0_size[2]):
+            
+           x_centroids_mask=math.ceil(centroids_mask[i1,0]) 
+           y_centroids_mask=math.ceil(centroids_mask[i1,1]) 
+           # new_mask[(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2))]=1
+           
+           new_mask[(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2))]=1
+           # record_new_mask0=[(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2)),(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2))]
+           # np.append(record_new_mask0,axis = 1)
+           record_new_mask.append([(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2))])
+           flag0=flag0+1
+       
+       
+       
+plt.imshow(new_mask, origin='lower')
+text111=(np.multiply(psf_nobacknoise,new_mask))
+text121=np.array(text111,dtype=int)
+img121=text121
+imgmax=np.max(np.hstack(img121))
+img131=255*img121/imgmax
+img141=img131.astype(np.uint8)
+cv2.namedWindow('image141')
+cv2.imshow('image141',img141)
+cv2.waitKey(0)
+
+
+def correlate2d(image1, image2):
+    image21=4000*image2/np.sum(image2)
+    image22=image21-np.max(image21)*0.6
+    image22[image22<0]=0
+    con2d=signal.convolve2d(image1, image22, 'same')
+    
+    pos=np.unravel_index(np.argmax(con2d),con2d.shape)
+    return pos
+
+num_new_mask, labels_new_mask, stats_new_mask, centroids_new_mask=cv2.connectedComponentsWithStats(new_mask.astype(np.uint8),connectivity=8)
+input0_x_size=32
+input0_y_size=input0_x_size
 upsample=4
-grid_x, grid_y = np.mgrid[0:input0_x_size*x_pixel:((upsample*input0_x_size)-(upsample-1))*1j, 0:input0_y_size*y_pixel:((upsample*input0_y_size)-(upsample-1))*1j]
-
-points =  np.mgrid[0:input0_x_size*x_pixel:input0_x_size*1j, 0:input0_y_size*y_pixel:input0_y_size*1j]
-x_points=points[0,:].reshape(-1, 1)
-y_points=points[1,:].reshape(-1, 1)
-xy_points=np.append(x_points,y_points,axis=1)
-spline_xy=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),input0_z_size))
-for i in range(input0_z_size):
+calib_size=125########
+padzero=calib_size-((upsample*input0_x_size)-(upsample-1))
+total_photon=4000
+record_z_min=np.zeros((flag0,2))
+spline_xy_padzeros_photon=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),flag0))
+corr=np.zeros((((upsample*input0_x_size)-(upsample-1))*2-1,((upsample*input0_y_size)-(upsample-1))*2-1,flag0))
+ycorr=np.zeros(flag0)
+xcorr=np.zeros(flag0)
+for i1 in range(flag0):
+    # mask_sep=np.zeros((input0_x_size,input0_y_size))
+    if i1>0:
+        # mask_sep=np.where(labels_new_mask==i1)
+        grid_x, grid_y = np.mgrid[0:input0_x_size:((upsample*input0_x_size)-(upsample-1))*1j, 0:input0_y_size:((upsample*input0_y_size)-(upsample-1))*1j]
     
-    values_points=input0[i,:].reshape(-1, 1)
-    grid_z2 = griddata(xy_points, values_points, (grid_x, grid_y), method='cubic')
-    # plt.imshow(grid_z2[:,:,0], origin='lower')
-    spline_xy[:,:,i]=grid_z2[:,:,0]
-    
-spline_xy_size = spline_xy.shape
-spline_xy_y_size=spline_xy_size[0]
-spline_xy_x_size=spline_xy_size[1]
- 
-
-
-
-
-z_points=np.linspace(0,z_step_size*(input0_z_size-1),input0_z_size)
-grid_z=np.linspace(0,z_step_size*(input0_z_size-1),((upsample*input0_z_size)-(upsample-1)))
-spline_xyz=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),(upsample*input0_z_size)-(upsample-1)))
-for i1 in range(spline_xy_y_size):
-    for j1 in range(spline_xy_x_size):
-        z_values=spline_xy[i1,j1,:]
-        f2 = interp1d(z_points, z_values, kind='cubic')
-        spline_xyz[i1,j1,:]=f2(grid_z)
+        points =  np.mgrid[0:input0_x_size:input0_x_size*1j, 0:input0_y_size:input0_y_size*1j]
+        x_points=points[0,:].reshape(-1, 1)
+        y_points=points[1,:].reshape(-1, 1)
+        xy_points=np.append(x_points,y_points,axis=1)
+        spline_xy=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1)))   
+        values_points0=img[record_new_mask[i1][0]:record_new_mask[i1][1],record_new_mask[i1][2]:record_new_mask[i1][3]]
+        mask_image=np.zeros(values_points0.shape)
+        total_energy=np.sum(values_points0)
+        avage_energy=total_energy/(input0_x_size*input0_y_size)
+        input0_nonoise=values_points0-avage_energy*0.2
+        input0_nonoise[:,:][input0_nonoise < 0] = 0
+        values_points=input0_nonoise.reshape(-1, 1)
+        grid_z2 = griddata(xy_points, values_points, (grid_x, grid_y), method='cubic')
+        spline_xy=grid_z2[:,:,0]
+        spline_xy_padzeros=np.pad(spline_xy,((int(padzero/2),int(padzero/2)),(int(padzero/2),int(padzero/2))),'constant', constant_values=(0,0)) 
+        sumz=np.zeros(fft2_spline_xyz.shape[2])
+        spline_xy_padzeros_photon[:,:,i1]=total_photon*spline_xy_padzeros/np.sum(spline_xy_padzeros)
+        for j1 in range(fft2_spline_xyz.shape[2]):
+            
+            # fft2_spline_xy_padzeros_photon=np.fft.fftshift(np.fft.fft2(spline_xy_padzeros_photon))
+            fft2_spline_xy_padzeros_photon=np.fft.fft2(spline_xy_padzeros_photon[:,:,i1])
+            
+            aa=4000*np.absolute(fft2_spline_xy_padzeros_photon)/np.sum(np.absolute(fft2_spline_xy_padzeros_photon))
+            bb=4000*np.absolute(fft2_spline_xyz[:,:,j1])/np.sum(np.absolute(fft2_spline_xyz[:,:,j1]))
+            # sumz[j1]=np.sum((np.absolute(fft2_spline_xy_padzeros_photon)-np.absolute(fft2_spline_xyz[:,:,j1]))**2)
+            sumz[j1]=np.sum((aa-bb)**2)
+        sumz_list=sumz.tolist()
+        sumz_min_list = min(sumz_list) 
+        min_index = sumz_list.index(min(sumz_list)) 
         
+        record_z_min[i1,:]=[sumz_min_list,min_index]
+        # corr[:,:,i1] = signal.correlate2d( spline_xy_padzeros_photon[:,:,i1],spline_xyz_photon[:,:,min_index], mode='full', boundary='fill', fillvalue=0)
+        # ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
+        # corr[:,:,i1] = np.correlate(spline_xyz_photon[:,:,min_index],spline_xy_padzeros_photon[:,:,i1],mode='same')
+        # ycorr[i1], xcorr[i1] = np.unravel_index(np.argmax(corr[:,:,i1]), corr[:,:,i1].shape)
+        xyzb = correlate2d(spline_xy_padzeros_photon[:,:,i1],spline_xyz_photon[:,:,min_index])
+        ycorr[i1]=xyzb[0]
+        xcorr[i1]=xyzb[1]
 
-# plt.imshow(spline_xyz[:,:,36], origin='lower')
-# plt.imshow(input0[9,:,:], origin='lower')
-fft2_spline_xyz=np.zeros(spline_xyz.shape,dtype=complex)
-spline_xyz_photon=np.zeros(spline_xyz.shape,dtype=complex)
-for k1 in range((upsample*input0_z_size)-(upsample-1)):
-    spline_xyz_photon[:,:,k1]=total_photon*spline_xyz[:,:,k1]/np.sum(spline_xyz[:,:,k1])
-    # fft2_spline_xyz[:,:,k1]=np.fft.fftshift(np.fft.fft2(spline_xyz[:,:,k1]))
-    fft2_spline_xyz[:,:,k1]=np.fft.fft2(spline_xyz[:,:,k1])
-        
+
+
+
+
+# plt.imshow(np.absolute(fft2_spline_xyz[:,:,80]), origin='lower')
+plt.imshow(spline_xyz[:,:,16],origin='lower')
+
+# plt.imshow(np.absolute(fft2_spline_xy_padzeros_photon), origin='lower')
+plt.imshow(spline_xy_padzeros_photon[:,:,36], origin='lower')
+plt.scatter(xcorr[36], ycorr[36],s=10,c="r")
+# plt.imshow(fft2_spline_xy_padzeros_photon, origin='lower')
+plt.imshow(np.absolute(corr), origin='lower')
+
+
+imgmax=np.max(np.hstack(img))
+imgf1=255*img/imgmax
+imgf2=imgf1.astype(np.uint8)
+
+
+for i1 in range(flag0):
+    # mask_sep=np.zeros((input0_x_size,input0_y_size))
+    if i1>0:
+        if record_z_min[i1][0]<2100:
+            xtlc=record_new_mask[i1][2]+16+int((xcorr[i1]-125/2)/4)
+            ytlc=record_new_mask[i1][0]+16+int((ycorr[i1]-125/2)/4)
+            xtlc_r=(record_new_mask[i1][2]+16+(xcorr[i1]-125/2))*0.01625
+            ytlc_r=(record_new_mask[i1][0]+16+(xcorr[i1]-125/2))*0.01625
+            ztlc=record_z_min[i1][1]*0.025
+            text = "ID:"+str(i1)+" " +"xy:"+str(round(xtlc_r,2))+" "+str(round(ytlc,2))+" "+"z:"+str(round(ztlc,2))
+            cv2.putText(imgf2, text, (int(xtlc-70), int(ytlc + 40)), cv2.FONT_HERSHEY_PLAIN, 1.3, (255, 0, 0), 1)
+            cv2.rectangle(imgf2, (int(xtlc-20), int(ytlc-20)), (int(xtlc+20), int(ytlc+20)), (255, 0, 0), 2) 
+
+
+cv2.imshow("gray_img", imgf2)
+cv2.waitKey(0)
