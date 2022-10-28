@@ -49,6 +49,17 @@ NFP0=[0,1,-1]
 NFP0=np.array(NFP0)
 FOV_size  =70
 
+
+
+data_stack=
+N_bg_stack=
+std_bg_stack=
+gBlur=
+cost_alter=np.ones((FOV_size,FOV_size,NFP0.shape[0]))
+Nph_opt_flag=1
+
+
+
 d_mask_pixel,phi,N_crop,g_bfp,circ_mask_opt,N,circ_mask=PSF_generate_preprocess(lamda,NA,M,f_4f,pixel_size_CCD,pixel_size_SLM,n_glass,n_medium,k,z_emit,SAF_flag,polar_flag,vec_flag,u,signal,FOV_size)
 
 
