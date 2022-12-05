@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Oct 14 10:07:50 2022
+
+@author: e0947330
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Oct  7 16:54:38 2022
 
 @author: e0947330
@@ -14,7 +21,7 @@ from scipy.interpolate import griddata,interp1d
 
 input0 = np.array(tifffile.imread('G:/tony lab/cx/E 488 off 561 on 001-half.tif'))
 input0_size = input0.shape
-img=input0[10,:,:] 
+img=input0[75,:,:] 
 imgmax=np.max(np.hstack(img))
 img1=255*img/imgmax
 img2=img1.astype(np.uint8)
@@ -168,16 +175,18 @@ new_mask=np.zeros(labels_mask.shape)
 record_new_mask=[]
 flag0=0
 for i1 in range(num_labels_mask):
-    if (math.ceil(big_circel/2)<=centroids_mask[i1,0]) and (math.ceil(big_circel/2)<=centroids_mask[i1,1]) and (input0_size[2]-centroids_mask[i1,0]>math.ceil(big_circel/2)) and (input0_size[1]-centroids_mask[i1,1]>math.ceil(big_circel/2)):
-       y_centroids_mask=math.ceil(centroids_mask[i1,0]) 
-       x_centroids_mask=math.ceil(centroids_mask[i1,1]) 
-       # new_mask[(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2))]=1
-       
-       new_mask[(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2)),(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2))]=1
-       # record_new_mask0=[(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2)),(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2))]
-       # np.append(record_new_mask0,axis = 1)
-       record_new_mask.append([(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2)),(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2))])
-       flag0=flag0+1
+    if (math.ceil(big_circel/2)<=centroids_mask[i1,0]) and (math.ceil(big_circel/2)<=centroids_mask[i1,1]):
+        if (centroids_mask[i1,0]+math.ceil(big_circel/2)<input0_size[2]) and (centroids_mask[i1,1]+math.ceil(big_circel/2)<input0_size[2]):
+            
+           x_centroids_mask=math.ceil(centroids_mask[i1,0]) 
+           y_centroids_mask=math.ceil(centroids_mask[i1,1]) 
+           # new_mask[(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2))]=1
+           
+           new_mask[(y_centroids_mask-math.ceil(big_circel/2)):(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)):(x_centroids_mask+math.ceil(big_circel/2))]=1
+           # record_new_mask0=[(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2)),(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2))]
+           # np.append(record_new_mask0,axis = 1)
+           record_new_mask.append([(y_centroids_mask-math.ceil(big_circel/2)),(y_centroids_mask+math.ceil(big_circel/2)),(x_centroids_mask-math.ceil(big_circel/2)),(x_centroids_mask+math.ceil(big_circel/2))])
+           flag0=flag0+1
        
        
        
@@ -203,18 +212,18 @@ def correlate2d(image1, image2):
     return pos
 
 num_new_mask, labels_new_mask, stats_new_mask, centroids_new_mask=cv2.connectedComponentsWithStats(new_mask.astype(np.uint8),connectivity=8)
-input0_x_size=int(math.sqrt(stats_new_mask[1,4]))
+input0_x_size=32
 input0_y_size=input0_x_size
 upsample=4
 calib_size=125########
 padzero=calib_size-((upsample*input0_x_size)-(upsample-1))
 total_photon=4000
-record_z_min=np.zeros((num_new_mask,2))
-spline_xy_padzeros_photon=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),num_new_mask))
-corr=np.zeros((((upsample*input0_x_size)-(upsample-1))*2-1,((upsample*input0_y_size)-(upsample-1))*2-1,num_new_mask))
-ycorr=np.zeros(num_new_mask)
-xcorr=np.zeros(num_new_mask)
-for i1 in range(num_new_mask):
+record_z_min=np.zeros((flag0,2))
+spline_xy_padzeros_photon=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1),flag0))
+corr=np.zeros((((upsample*input0_x_size)-(upsample-1))*2-1,((upsample*input0_y_size)-(upsample-1))*2-1,flag0))
+ycorr=np.zeros(flag0)
+xcorr=np.zeros(flag0)
+for i1 in range(flag0):
     # mask_sep=np.zeros((input0_x_size,input0_y_size))
     if i1>0:
         # mask_sep=np.where(labels_new_mask==i1)
@@ -225,7 +234,7 @@ for i1 in range(num_new_mask):
         y_points=points[1,:].reshape(-1, 1)
         xy_points=np.append(x_points,y_points,axis=1)
         spline_xy=np.zeros(((upsample*input0_x_size)-(upsample-1),(upsample*input0_y_size)-(upsample-1)))   
-        values_points0=img[stats_new_mask[i1,1]:stats_new_mask[i1,1]+input0_y_size,stats_new_mask[i1,0]:stats_new_mask[i1,0]+input0_x_size]
+        values_points0=img[record_new_mask[i1][0]:record_new_mask[i1][1],record_new_mask[i1][2]:record_new_mask[i1][3]]
         mask_image=np.zeros(values_points0.shape)
         total_energy=np.sum(values_points0)
         avage_energy=total_energy/(input0_x_size*input0_y_size)
@@ -264,21 +273,35 @@ for i1 in range(num_new_mask):
 
 
 # plt.imshow(np.absolute(fft2_spline_xyz[:,:,80]), origin='lower')
-plt.imshow(spline_xyz[:,:,13],origin='lower')
+plt.imshow(spline_xyz[:,:,16],origin='lower')
 
 # plt.imshow(np.absolute(fft2_spline_xy_padzeros_photon), origin='lower')
-plt.imshow(spline_xy_padzeros_photon[:,:,2], origin='lower')
-plt.scatter(xcorr[2], ycorr[2],s=10,c="r")
+plt.imshow(spline_xy_padzeros_photon[:,:,36], origin='lower')
+plt.scatter(xcorr[36], ycorr[36],s=10,c="r")
 # plt.imshow(fft2_spline_xy_padzeros_photon, origin='lower')
 plt.imshow(np.absolute(corr), origin='lower')
 
 
-for i1 in range(num_new_mask):
+imgmax=np.max(np.hstack(img))
+imgf1=255*img/imgmax
+imgf2=imgf1.astype(np.uint8)
+
+
+for i1 in range(flag0):
     # mask_sep=np.zeros((input0_x_size,input0_y_size))
     if i1>0:
-        cv2.putText(gray_img, text, (int(xtl[i2]-20), int(ytl[i2] - 5)), cv2.FONT_HERSHEY_PLAIN, 0.5, (255, 0, 0), 1)
-        cv2.rectangle(gray_img, (int(xtl[i2]), int(ytl[i2])), (int(xtl[i2]+w), int(ytl[i2]+h)), (255, 0, 0), 2) 
-cv2.imshow("gray_img", gray_img)
+        if record_z_min[i1][0]<2100:
+            xtlc=record_new_mask[i1][2]+16+int((xcorr[i1]-125/2)/4)
+            ytlc=record_new_mask[i1][0]+16+int((ycorr[i1]-125/2)/4)
+            xtlc_r=(record_new_mask[i1][2]+16+(xcorr[i1]-125/2))*0.01625
+            ytlc_r=(record_new_mask[i1][0]+16+(xcorr[i1]-125/2))*0.01625
+            ztlc=record_z_min[i1][1]*0.025
+            text = "ID:"+str(i1)+" " +"xy:"+str(round(xtlc_r,2))+" "+str(round(ytlc,2))+" "+"z:"+str(round(ztlc,2))
+            cv2.putText(imgf2, text, (int(xtlc-70), int(ytlc + 40)), cv2.FONT_HERSHEY_PLAIN, 1.3, (255, 0, 0), 1)
+            cv2.rectangle(imgf2, (int(xtlc-20), int(ytlc-20)), (int(xtlc+20), int(ytlc+20)), (255, 0, 0), 2) 
+
+
+cv2.imshow("gray_img", imgf2)
 cv2.waitKey(0)
 # from skimage import io
 # io.imsave('G:/tony lab/cx/change.tif', text12)
