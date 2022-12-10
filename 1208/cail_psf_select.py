@@ -144,7 +144,7 @@ def SetPoints(windowname, img):
 
 zuobiao=SetPoints("image1",input0_255[start_frame,:,:])
 
-win_size_small=33
+win_size_small=73
 half_win_size_small=int(win_size_small/2)
 cail_psf=np.zeros((final_fram-start_frame+1,win_size_small,win_size_small))
 for i1 in range(int(np.size(zuobiao)/2)):
@@ -166,3 +166,7 @@ for i1 in range(cail_psf.shape[0]):
     sum_cail_psf=np.sum(cail_psf[i1,:,:])
     cail_psf[i1,:,:]= cail_psf[i1,:,:]-1*sum_cail_psf/(win_size_small*win_size_small)
     cail_psf[i1,:,:]=np.where(cail_psf[i1,:,:] >0, cail_psf[i1,:,:], 0)
+    
+    
+np.save(file="cail_psf_73.npy", arr=cail_psf)
+

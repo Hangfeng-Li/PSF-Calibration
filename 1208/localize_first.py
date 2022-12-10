@@ -28,6 +28,7 @@ import gausscenter
 import matplotlib.patches as patches
 import cv2
 import math
+from spline4d import spline_4D
 
 MAX_LOCS = int(1e6)
 
@@ -147,7 +148,7 @@ def identify_in_frame(frame, minimum_ng, box, roi=None):
 
 
 
-cail_psf= _np.load(file="cail_psf.npy")
+cail_psf= _np.load(file="cail_psf_73.npy")
 distance=_np.zeros(cail_psf.shape[0])
 angle_cail=_np.zeros(cail_psf.shape[0])
 z_position_cail=_np.zeros(cail_psf.shape[0])
@@ -169,6 +170,37 @@ max_distance=_np.max(distance)
 
 
 
+x_pixel=0.065
+y_pixel=0.065
+z_step_size=0.1
+total_photon=40000
+matrix_parameter=spline_4D(cail_psf,x_pixel,y_pixel,z_step_size,total_photon)
+
+
+#####
+
+from generate_cail_psf_spline import generate_cail_psf
+z_test0=0.5
+y_test0=0.2
+x_test0=-0.2
+h_test0=100
+b_test0=5
+big_win_size_small=73
+win_size_small=33
+x_pixel=0.065
+y_pixel=0.065
+z_step_size=0.1
+cail_psf_size=cail_psf.shape
+test=generate_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small,win_size_small,x_pixel,y_pixel,z_step_size,cail_psf_size,matrix_parameter)
+_plt.imshow(test,origin='lower')
+#####
+
+
+
+
+
+
+
 
 Exp_images= _np.array(tifffile.imread('G:/tony lab/cx/E 488 off 561 on -1208,crop.tif'))# read to numpy array
 # Exp_images= _np.array(tifffile.imread('G:/tony lab/cx/DH-PSF_TRACKING_SPLINE_MLE/cail.tif'))# read to numpy array
@@ -184,8 +216,8 @@ for i1 in range(Exp_images.shape[0]):
     # _plt.scatter(x,y,s=10,c="r")
     coordinate[i1]=(y,x) 
 
-width=30
-height=30
+width=33
+height=33
 total_frame_angle={}
 total_frame_Center_coordinate={}
 # for i1 in range(Exp_images.shape[0]):
@@ -239,8 +271,8 @@ for i1 in range(30,32):
     top_left_y=_np.zeros(j2)      
     if not j2==0:
         for j3 in range(j2):
-            top_left_x[j3]=Center_coordinate[j3][0]-15
-            top_left_y[j3]=Center_coordinate[j3][1]-15
+            top_left_x[j3]=Center_coordinate[j3][0]-16
+            top_left_y[j3]=Center_coordinate[j3][1]-16
     if not j2==0:     
         max_pixel=_np.max(Exp_images[i1,:,:])
         gray_image=(255*Exp_images[i1,:,:]/max_pixel).astype(_np.uint8)
