@@ -20,8 +20,35 @@ Created on Tue Nov 22 13:57:46 2022
 """
 import numpy as  np
 import cv2
+import numba 
 
+# @numba.jit(nopython=True)
 def dev_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small,win_size_small,x_pixel,y_pixel,z_step_size,cail_psf_size,matrix_parameter):
+   
+    
+    # x_test0=0
+    # y_test0=0
+    # z_test0=0.4
+    # h_test0=90
+    # b_test0=3
+    
+    # input0_x_size=33
+    # input0_y_size=33
+    # input0_z_size=22
+    
+    # z_step_size=0.1
+    # x_pixel=0.065
+    # y_pixel=0.065
+    # cail_psf_size=cail_psf.shape
+    
+    
+    # big_win_size_small=73
+    # win_size_small=33
+    
+   
+    
+   
+    
    
     
     
@@ -92,9 +119,9 @@ def dev_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small,win_
                         for o in range(0,4):
                            
                             dev_h_img_test[i,j]=matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_h_img_test[i,j]
-                            dev_x_img_test[i,j]=((o+1)/(tx1-tx0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_h_img_test[i,j]
-                            dev_y_img_test[i,j]=((n+1)/(ty1-ty0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_h_img_test[i,j]
-                            dev_z_img_test[i,j]=((m+1)/(tz1-tz0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_h_img_test[i,j]
+                            dev_x_img_test[i,j]=((o+1)/(tx1-tx0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_x_img_test[i,j]
+                            dev_y_img_test[i,j]=((n+1)/(ty1-ty0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_y_img_test[i,j]
+                            dev_z_img_test[i,j]=((m+1)/(tz1-tz0))*matrix_parameter[matrix_num,m*16+n*4+o]*(((x_test-tx0)/(tx1-tx0))**o)*(((y_test-ty0)/(ty1-ty0))**n)*(((z_test0-tz0)/(tz1-tz0))**m)+dev_z_img_test[i,j]
     
     
     dev_h_img_test1 = cv2.resize(dev_h_img_test,(big_win_size_small,big_win_size_small), interpolation=cv2.INTER_CUBIC)
@@ -109,10 +136,10 @@ def dev_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small,win_
     dev_y_img_test1=-1*h_test0*dev_y_img_test1
     dev_z_img_test1=-1*h_test0*dev_z_img_test1
     
-    dev_h_img_test2=dev_h_img_test1[20:52,20:52]
-    dev_x_img_test2=dev_x_img_test1[20:52,20:52]
-    dev_y_img_test2=dev_y_img_test1[20:52,20:52]
-    dev_z_img_test2=dev_z_img_test1[20:52,20:52]
+    dev_h_img_test2=dev_h_img_test1[20:53,20:53]
+    dev_x_img_test2=dev_x_img_test1[20:53,20:53]
+    dev_y_img_test2=dev_y_img_test1[20:53,20:53]
+    dev_z_img_test2=dev_z_img_test1[20:53,20:53]
     return dev_h_img_test2,dev_x_img_test2,dev_y_img_test2,dev_z_img_test2
 
 

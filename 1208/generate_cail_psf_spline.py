@@ -13,7 +13,9 @@ Created on Tue Nov 22 13:57:46 2022
 """
 import numpy as  np
 import cv2
+import numba 
 
+# @numba.jit(nopython=True)
 def generate_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small,win_size_small,x_pixel,y_pixel,z_step_size,cail_psf_size,matrix_parameter):
    
     
@@ -88,5 +90,5 @@ def generate_cail_psf(z_test0,y_test0,x_test0,h_test0,b_test0,big_win_size_small
     
     img_test1 = cv2.resize(img_test,(big_win_size_small,big_win_size_small), interpolation=cv2.INTER_CUBIC)
     img_test1=h_test0*img_test1+b_test0
-    img_test2=img_test1[20:52,20:52]
+    img_test2=img_test1[20:53,20:53]
     return img_test2

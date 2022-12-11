@@ -17,7 +17,7 @@ from itertools import chain as _chain
 import matplotlib.pyplot as _plt
 # import gaussmle as _gaussmle
 # import io as _io
-import postprocess as _postprocess
+# import postprocess as _postprocess
 # import __main__ as main
 import os
 from datetime import datetime
@@ -176,15 +176,15 @@ z_step_size=0.1
 total_photon=40000
 matrix_parameter=spline_4D(cail_psf,x_pixel,y_pixel,z_step_size,total_photon)
 
-
+_np.save(file="matrix_parameter.npy", arr=matrix_parameter)
 #####
-
+matrix_parameter= _np.load(file="matrix_parameter.npy")
 from generate_cail_psf_spline import generate_cail_psf
 z_test0=0.5
-y_test0=0.2
+y_test0=0.3
 x_test0=-0.2
-h_test0=100
-b_test0=5
+h_test0=140
+b_test0=15
 big_win_size_small=73
 win_size_small=33
 x_pixel=0.065
