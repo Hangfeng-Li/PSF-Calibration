@@ -6,9 +6,14 @@ Created on Wed Dec 14 23:11:14 2022
 """
 
 import numpy as np
+from computeDelta3D import computeDelta3D
+from DerivativeSpline import DerivativeSpline
+from cholesky import cholesky
+from luEvaluate import luEvaluate
 
 
-def SplineMLE(box, data,spline_coeff,spline_xsize,spline_ysize,spline_zsize,size_box,iterations,init_parameters):
+
+def SplineMLE(subimg_stack, data,spline_coeff,spline_xsize,spline_ysize,spline_zsize,size_box,iterations,init_parameters):
     
     NV=5
     M=np.zeros((NV*NV,1))
