@@ -10,7 +10,7 @@ import numpy as np
 
 def luEvaluate(L, U, b, n, x):
     
-    y=np.zeros((6,1))
+    y=np.zeros((5,1))
     i=0
     j=0
     

@@ -27,10 +27,10 @@ def psf2cspline_np(psf):
 @jit(nopython=True)
 def calsplinecoeff(A,psf,psf_up):
     # calculate cspline coefficients
-    coeff = np.zeros((psf.shape[0]-1, psf.shape[1]-1, psf.shape[2]-1),64)
-    for i in range(coeff.shape[1]):
-        for j in range(coeff.shape[2]):
-            for k in range(coeff.shape[3]):
+    coeff = np.zeros((psf.shape[0]-1, psf.shape[1]-1, psf.shape[2]-1,64))
+    for i in range(coeff.shape[0]):
+        for j in range(coeff.shape[1]):
+            for k in range(coeff.shape[2]):
                 temp = psf_up[i*3 : 3*(i+1)+1, j*3 : 3*(j+1)+1, k*3 : 3*(k+1)+1]
                 #x = sp.linalg.solve(A, temp.reshape(64))
                 x = np.linalg.solve(A,temp.flatten())
@@ -39,6 +39,10 @@ def calsplinecoeff(A,psf,psf_up):
     return coeff
 
 
+# psf0= np.load(file="C:/Users/lihsn/Desktop/MBI/Tony Lab/cx/1208/cail_psf.npy")
 
+# psf=np.zeros((33,33,24))
+# for i1 in range(24):
+#        psf[:,:,i1]=psf0[i1,:,:]
 
-
+# s_coeff=psf2cspline_np(psf)

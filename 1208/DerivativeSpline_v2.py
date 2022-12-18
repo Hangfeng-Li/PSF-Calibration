@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sun Dec 18 17:03:04 2022
+
+@author: lihsn
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Dec 15 23:21:03 2022
 
 @author: lihsn
 """
 import numpy as np
+from fAt3Dj_v3 import fAt3Dj_v3
 
 
 # xc=ii+xstart+off
@@ -18,7 +26,7 @@ import numpy as np
 # dudt=np.zeros((5,1))
 
 
-def DerivativeSpline(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,spline_coeff,theta,dudt:
+def DerivativeSpline_v2(ii,jj,xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,theta,dudt,off,xstart,ystart,zstart):
     temp=0
     xc=max(xc,0)
     xc=min(xc,xsize-1)
@@ -30,11 +38,12 @@ def DerivativeSpline(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delt
     zc=min(zc,zsize-1)
     dudt=np.zeros((5,1))
     
+    temp0 = fAt3Dj_v3(ii+xstart+off,jj+ystart+off,zstart,xsize,ysize,zsize,delta_f,coeff)
     for i in range(64):
-        temp+=delta_f[i]*spline_coeff[int(i*(xsize*ysize*zsize)+zc*(xsize*ysize)+yc*xsize+xc)]
-        dudt[0]+=delta_dxf[i]*spline_coeff[int(i*(xsize*ysize*zsize)+zc*(xsize*ysize)+yc*xsize+xc)]
-        dudt[1]+=delta_dyf[i]*spline_coeff[int(i*(xsize*ysize*zsize)+zc*(xsize*ysize)+yc*xsize+xc)]
-        dudt[2]+=delta_dzf[i]*spline_coeff[int(i*(xsize*ysize*zsize)+zc*(xsize*ysize)+yc*xsize+xc)]
+        temp+=temp0[i]
+        dudt[0]+=delta_dxf[i]*temp0[i]
+        dudt[1]+=delta_dyf[i]*temp0[i]
+        dudt[2]+=delta_dzf[i]*temp0[i]
     dudt[0]*=-1*theta[3]
     dudt[1]*=-1*theta[3]
     dudt[2]*=theta[3]
@@ -44,3 +53,8 @@ def DerivativeSpline(xc,yc,zc,xsize,ysize,zsize,delta_f,delta_dxf,delta_dyf,delt
     
     return dudt,model
 
+
+    
+    
+                 
+            
