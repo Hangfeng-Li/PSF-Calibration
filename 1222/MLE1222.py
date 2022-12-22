@@ -9,6 +9,7 @@ from kernel_computeDelta3D import kernel_computeDelta3D
 from kernel_DerivativeSpline import kernel_DerivativeSpline
 from kernel_cholesky import kernel_cholesky
 from kernel_luEvaluate import kernel_luEvaluate
+from DerivativeSpline_v3 import DerivativeSpline_v3
 # void kernel_splineMLEFit_z_sCMOS(const int subregion,const float *d_data,const float *d_coeff, const int spline_xsize, const int spline_ysize, const int spline_zsize, const int sz, const int iterations, 
 # 	float *d_Parameters, float *d_CRLBs, float *d_LogLikelihood,float initZ, const int Nfits,const float *d_varim){
 # 		/*! 
@@ -35,7 +36,7 @@ for z1 in range(23):
                 d_coeff[k1+i1*64+j1*32*64+z1*32*32*64,0]=coeff[j1,i1,z1,k1]
                 
 Nmax=1.2
-initZ=18.7
+initZ=16
 sz=33
 subimg_stack=np.zeros((33,33))
 subimg_stack=simpsf[:,:,0]
@@ -50,7 +51,7 @@ size_box=33
 iterations=10
 
 # cor=np.column_stack(cor)
-init_parameters=[13.5,13.8,16.7,1,0.01]#13,13,16,1,0.01
+init_parameters=[14.5,12,1,0.01,16]#13,13,1,0.01,16
 
 init_parameters=np.column_stack(init_parameters).T
 
@@ -118,7 +119,7 @@ def MLELM():
 
 
     newTheta[3,0] = max(newTheta[3,0],0.01)
-    newTheta[2,0]= (Nmax-newTheta[3,0])/d_coeff[int((spline_zsize/2)*(spline_xsize*spline_ysize))+int((spline_ysize/2)*spline_xsize)+int((spline_xsize/2))]*4
+    # newTheta[2,0]= (Nmax-newTheta[3,0])/d_coeff[int((spline_zsize/2)*(spline_xsize*spline_ysize))+int((spline_ysize/2)*spline_xsize)+int((spline_xsize/2))]*4
 
     newTheta[4,0]=initZ
 
@@ -132,19 +133,19 @@ def MLELM():
     oldTheta=newTheta
 
 	
-    xc = -1.0*((newTheta[0,0]-sz)/2+0.5)
-    yc = -1.0*((newTheta[1,0]-sz)/2+0.5)
+    xc = -1.0*(newTheta[0,0]-sz/2+0.5)
+    yc = -1.0*(newTheta[1,0]-sz/2+0.5)
 
     off = np.floor((spline_xsize+1.0-sz)/2)
 
     xstart = np.floor(xc)
-    xc = xc-xstart;
+    xc = xc-xstart
 
     ystart = np.floor(yc)
-    yc = yc-ystart;
+    yc = yc-ystart
 
 	
-    zstart = np.floor(newTheta[4,0]);
+    zstart = np.floor(newTheta[4,0])
     zc = newTheta[4,0] -zstart
 
     newErr = 0
@@ -153,13 +154,16 @@ def MLELM():
     newDudt=np.zeros((5,1))
     model=0
     s_varim=np.zeros((sz*sz,1))
+    aa=np.zeros((33,33))
+    bb=np.zeros((33,33))
     for ii in range(sz):
         for jj in range(sz):
-            model1,newDudt=kernel_DerivativeSpline(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,d_coeff,newTheta,newDudt,model)
-            model=model1[0]
+            model1,newDudt=DerivativeSpline_v3(ii,jj,xc,yc,zc,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta,newDudt,off,xstart,ystart,zstart)
+            model=model1
             model +=s_varim[sz*jj+ii,0]
-            data=s_data[sz*jj+ii,0]+s_varim[sz*jj+ii,0]
-            
+            data=s_data[sz*ii+jj,0]+s_varim[sz*jj+ii,0]
+            aa[ii,jj]=model
+            bb[ii,jj]=data
             if (data>0):
                 newErr = newErr + 2*((model-data)-data*np.log(model/data))
             else:
@@ -179,7 +183,8 @@ def MLELM():
                       
                       hessian[l*NV+m,0] +=t2*newDudt[l,0]*newDudt[m,0]
                       hessian[m*NV+l,0] = hessian[l*NV+m,0]
-    		
+        # plt.imshow(aa,origin='lower')    
+        # plt.imshow(bb,origin='lower')  		
 
     for kk in range(iterations):
 
@@ -266,10 +271,10 @@ def MLELM():
                     model=0
                     for ii in range(sz):
                         for jj in range(sz):
-                            model1,newDudt=kernel_DerivativeSpline(ii+xstart+off,jj+ystart+off,zstart,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,d_coeff,newTheta,newDudt,model)
-                            model=model1[0]
+                            model1,newDudt=DerivativeSpline_v3(ii,jj,xc,yc,zc,spline_xsize,spline_ysize,spline_zsize,delta_f,delta_dxf,delta_dyf,delta_dzf,coeff,newTheta,newDudt,off,xstart,ystart,zstart)
+                            model=model1
                             model +=s_varim[sz*jj+ii,0]
-                            data=s_data[sz*jj+ii,0]+s_varim[sz*jj+ii,0]	
+                            data=s_data[sz*ii+jj,0]+s_varim[sz*jj+ii,0]	
 
                             if (data>0):
                                 newErr = newErr + 2*((model-data)-data*np.log(model/data))
